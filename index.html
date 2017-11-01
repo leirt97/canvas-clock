@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
+    <title>canvas clock</title>
+    <style>
+        *{
+            margin: 0;padding: 0;
+        }
+        html,body{
+            width: 100%;height: 100%;
+        }
+        div{
+            width: 100%;height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <canvas id="clock" width="500px" height="500px"></canvas>
+    </div>
+    <script>
+        var oCvs = document.getElementById('clock');
+        var ctx = oCvs.getContext('2d');
+        var width = ctx.canvas.width;
+        var height = ctx.canvas.height;
+        var r = width / 2;
+        //画外圆
+        function drawCircle() {
+            ctx.save();
+            ctx.translate(r, r);//将起始点放在中心点
+            ctx.beginPath();
+            ctx.lineWidth = 10;//划线的宽度 
+            //画圆 (x, y, r, 弧度, 顺时针)
+            ctx.arc(0, 0, r - 5, 0, 2*Math.PI, false);
+            ctx.stroke();
+            //画小时数
+            var hourNumbers = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2];
+            ctx.font = '18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            hourNumbers.forEach(function(number, i) {
+                var rad = 2 * Math.PI / 12 * i;
+                var x = Math.cos(rad) * (r - 35);
+                var y = Math.sin(rad) * (r - 35);
+                ctx.fillText(number, x, y);
+            });
+            //画刻度
+            for(var i = 0; i < 60; i++) {
+                var rad = 2 * Math.PI / 60 * i;
+                var x = Math.cos(rad) * (r - 11);
+                var y = Math.sin(rad) * (r - 11);
+                ctx.save();
+                ctx.beginPath();
+                ctx.lineHeight = 2;
+                ctx.moveTo(x, y);
+                ctx.lineCap = 'round';
+                if(i % 5) {
+                    var x1 = Math.cos(rad) * (r - 15);
+                    var y1 = Math.sin(rad) * (r - 15);
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#aaa';
+                    ctx.lineTo(x1, y1);
+                } else {
+                    var x1 = Math.cos(rad) * (r - 20);
+                    var y1 = Math.sin(rad) * (r - 20);
+                    ctx.lineWidth = 5;
+                    ctx.lineTo(x1, y1);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        //画时针
+        function drawHour(hour, minute, second) {
+            ctx.save();//保存画小时之前的画布环境
+            var rad = 2 * Math.PI / 12 * hour;
+            var mrad = 2 * Math.PI / 12 / 60 * minute;
+            var srad = 2 * Math.PI / 12 / 60 / 60 * second;
+            ctx.beginPath();
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.rotate(rad + mrad + srad);
+            ctx.moveTo(0, 10);
+            ctx.lineTo(0, -r / 2);
+            ctx.stroke();
+            ctx.restore();//还原到画小时之前的画布环境
+        }
+        //画分针
+        function drawMinus(minute, second) {
+            ctx.save();
+            var rad = 2 * Math.PI / 60 * minute;
+            var srad = 2 * Math.PI / 60 / 60 * second;
+            ctx.beginPath();
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.rotate(rad + srad);
+            ctx.moveTo(0, 20);
+            ctx.lineTo(0, -r + 80);
+            ctx.stroke();
+            ctx.restore();
+        } 
+        //画秒针
+        function drawSecond(second) {
+            ctx.save();
+            var rad = 2 * Math.PI / 60 * second;
+            ctx.beginPath();
+            ctx.strokeStyle = 'red';
+            ctx.rotate(rad);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.moveTo(0, 30);
+            ctx.lineTo(0, -r + 45);
+            ctx.stroke();
+            ctx.restore();
+        }
+        //画原点
+        function drawDot() {
+            ctx.beginPath();
+            ctx.fillStyle = '#eee';
+            ctx.arc(0, 0, 5, 0, 2 * Math.PI, false);
+            ctx.fill();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            var now = new Date();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            var second = now.getSeconds();
+            drawCircle();
+            drawHour(hour,minute,second);
+            drawMinus(minute,second);
+            drawSecond(second);
+            drawDot();
+            ctx.restore();
+        }
+        //最开始画一次
+        draw();
+        //每秒画一次
+        setInterval(draw, 1000);
+    </script>
+</body>
+</html>
